@@ -1,0 +1,58 @@
+################## LECTOR DE ARCHIVOS EN FORMATO .FASTA #######################
+## Para poder leer un fichero en formato .fasta descargado de la web, primero
+# tenemos que ver que estamos trabajando en el directorio donde se encuentra 
+# el archivo que queremos leer. Después, tenemos que importar de Bio la función
+# que nos permite leer el archivo, es decir, SeqIO. Esta tiene un comando que 
+# permite pasar a lenguaje que entiende Python (parser) y así podemos acceder
+# a la información del archivo 
+
+## ARCHIVOS QUE SE COMPONEN DE UNA SECUENCIA 
+
+from Bio import SeqIO ##Cargamos el paquete que nos permite leer los archivos
+
+tupan_dna = SeqIO.read("TupanADN.fasta", "fasta") 
+
+## FUNCIÓN SEQ.IO READ: este comando es el que nos permite leer los archivos
+# que sabemos que sólo se componen de una sencuencia (como es este caso)
+# pasándolo al lenguaje de Python. Tiene dos argumentos principales: 
+# SeqIO.read("nombre_del_archivo.fasta", "formato")
+# En nuestro caso, sólo estamos trabajando con archivos tipo .fasta, por lo que
+# en formato tendríamos que poner "fasta" (SIN PUNTO ANTES)
+
+print(type(tupan_dna)) ## Comprobramos que la variable obtenida es del 
+                        #tipo "Bio.SeqRecord"
+
+##Este tipo de variable tiene distintos atributos: 
+tupan_dna.seq[0:30] ## .seq - proporciona la secuencia 
+
+tupan_dna.id ## .id - devuelve el número de acceso de la secuencia
+
+tupan_dna.name ## .name - devuelve el nombre de la secuencia, en ocasiones 
+               ## coincide con .id
+
+
+
+## ARCHIVOS QUE SE COMPONEN DE +1 SECUENCIA
+# En este caso, vamos a usar la función "SeqIO.parse" esta función tiene los 
+# mismos argumentos que "SeqIO.read()"
+    
+from Bio import SeqIO
+
+lsorchid_dna = list(SeqIO.parse("ls_orchid.fasta", "fasta"))
+
+print(type(lsorchid_dna))
+print(len(lsorchid_dna))
+   
+## Con el comando anterior guardamos las secuencias en una variable tipo lista
+# Para acceder a la información general de una determinada secuencia: 
+
+print (lsorchid_dna[21])
+
+## Si lo que queremos es obtener la secuencia por separado, primero hay que 
+# guardar en una variable la entrada de la lista que queremos. Una vez hecho 
+# esto, guardamos en otra variable la secuencia 
+
+lsorchid_dna_21 = lsorchid_dna[21]
+seq_lsorchid_21 = lsorchid_dna_21.seq
+
+print(seq_lsorchid_21[0:10])
