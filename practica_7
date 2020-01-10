@@ -1,0 +1,374 @@
+
+############################## PRÃCTICA 7 #####################################
+# Comenzamos descargando las secuencias que vamos a usar y guardÃ¡ndolas en 
+# distintas variables 
+
+from Bio import SeqIO ##Cargamos el paquete que nos permite leer los archivos
+from Bio.Seq import Seq
+
+genoma = list(SeqIO.parse("caulobac_aa.fasta", "fasta"))
+
+dna = SeqIO.read("caulobac_dna.fasta", "fasta")
+midna = dna[70000:140000]
+
+# EJERCICIO 1.1
+# Vamos a escribir una funciÃ³n, a la que llamaremos buscaORFs(), que tendrÃ¡ 
+# como input una secuencia de DNA. Esta funciÃ³n la traducirÃ¡ aminoÃ¡cidos y 
+# buscarÃ¡ las metioninas y los codones Stop. GuardarÃ¡ las posiciones del primer 
+# nucleÃ³tido del codÃ³n en sus respectivas variables e irÃ¡ emparejando el inicio
+# con su correspondiente stop. Como resultado nos proporcionarÃ¡ una matriz de 
+# dos filas (una de codones de inicio y otra de Stop) y tantas columnas como 
+# ORFs haya. 
+
+def buscaORFs(seq):
+    from Bio.Seq import Seq
+    import numpy as np
+    
+    aaa_dna = seq.translate()
+    ar_aa = np.array(aaa_dna)
+    
+    ch1 = np.array(np.where(ar_aa == 'M'))
+    ch2 = np.array(np.where(ar_aa == '*'))
+    
+    aaa_inicios = ch1.tolist()[0]
+    aaa_paradas = ch2.tolist()[0]
+    
+    inicios = [(i*3)-2 for i in aaa_inicios]
+    paradas = [(i*3)-2 for i in aaa_paradas]
+    
+    res = []
+#    En el caso de que no haya ni metioninas ni codones stop:
+    if len(aaa_inicios)-1 == 0|len(aaa_paradas)-1 == 0:
+        return(res)
+    
+    i_inicios = 1
+    i_paradas = 1
+    aunHayGenes = True
+    
+    while aunHayGenes == True:
+        gen_inicio = inicios[i_inicios]
+        gen_parada = paradas[i_paradas]
+        
+        while aunHayGenes == True and paradas[i_paradas] < gen_inicio:
+            if(i_paradas == len(paradas)-1):
+                aunHayGenes = False
+            else:
+                i_paradas = i_paradas + 1
+            if aunHayGenes == True :                
+                res.append([gen_inicio, gen_parada])
+        
+        while aunHayGenes == True and inicios[i_inicios] < gen_parada:
+            if i_inicios == len(inicios)-1:
+                aunHayGenes = False
+            else:
+                i_inicios = i_inicios + 1
+                
+ 
+# Eliminamos los elementos que aparecen repetidos
+    res_set = set(tuple(x) for x in res)
+    res_uniq = [list(x) for x in res_set]
+     
+    return(sorted(res_uniq))
+            
+# Aplicamos la funciÃ³n a midna y representamos en un histograma el resultado     
+midna_ORFs = buscaORFs(midna)              
+  
+# Primero, obtenemos las longitudes de cada ORF:
+
+def long(res_ORF):
+    long = []
+    for n in range(len(res_ORF)):
+        sublist = res_ORF[n]
+        res = sublist[0]-sublist[1]
+        long.append(abs(res))
+    return(long)
+
+
+long = long(midna_ORFs)
+
+# Ahora representamos la frecuencia de la longitud del ORF dentro de midna
+import matplotlib.pyplot as plt
+
+plt.hist(long, bins = len(long), rwidth = 0.95, color = 'grey', 
+         histtype = 'bar')
+plt.xlabel('Longitud de ORF')
+plt.ylabel('Frecuencia')
+plt.grid(True)
+
+plt.savefig('P7_1.png')
+
+plt.show()
+
+# EJERCIO 1.2
+# Vamos a modificar el cÃ³digo anterior para que busque el ORF en el marco de
+# lectura que le indiquemos:
+
+
+def buscaORFs_frame(seq, frame):
+    if frame > 0:
+        #correspondiente a +1,+2,+3
+        result = buscaORFs(seq[[0,0,2,1][frame]:])
+    else:
+        rev_comp = seq.reverse_complement()
+        result = buscaORFs(rev_comp[[0,0,2,1][-frame]:])
+        
+    return(result)
+    
+# Una vez definida la funciÃ³n, calculmos los ORFs para la variable midna con 
+# los marcos de lectura +2 y -2
+
+ORF2_midna = buscaORFs_frame(midna, 2)
+ORFc2_midna = buscaORFs_frame(midna, -2)
+
+# Calculamos la longitud de cada resultado
+
+long2 = long(ORF2_midna)
+longc2 = long(ORFc2_midna)
+
+
+# Ahora representamos las frecuencias de la longitud del ORF dentro de midna
+import matplotlib.pyplot as plt
+
+plt.hist(long2, bins = len(long), rwidth = 0.95, color = 'grey', 
+         histtype = 'bar')
+plt.hist(longc2, bins = len(long), rwidth = 0.95, color = 'blue', 
+         histtype = 'bar')
+plt.xlabel('Longitud de ORF')
+plt.ylabel('Frecuencia')
+plt.grid(True)
+plt.savefig('P7_2.png')
+
+plt.show()
+    
+# EJERCICIO 1.3
+# Vamos a definir una funciÃ³n que combine los diferentes resultados que se
+# obtienen al bsucar los ORFs en todos sus posibles marcos abiertos de lectura.
+# El resultado serÃ¡ un diccionario con los resultados. 
+
+def buscaORFs_all (sec):
+    res = {}
+    for frame in range(-3,4):   
+        res[frame] = buscaORFs_frame(sec,frame)
+
+    return(res)
+
+# Calculamos todos los ORFs en todos los posibles marcos de lectura de midna:
+
+all_ORF = buscaORFs_all(midna)
+        
+# Dibujamos un histograma con los resultados obtenidos y que se encuentran 
+# en la variable all_ORF. Pero primero, calculamos las longitudes de cada uno
+
+all_long = {}
+
+for n in all_ORF.keys():
+    values = all_ORF[n]
+    all_long[n] = long(values)
+    
+# Ahora los representamos
+
+import matplotlib.pyplot as plt
+
+plt.hist(list(all_long.values()),
+         rwidth = 0.95, 
+         histtype = 'bar')
+plt.xlabel('Longitud de ORF')
+plt.ylabel('Frecuencia')
+plt.grid(True)
+plt.legend(list(all_long.keys()))
+plt.savefig('P7_3.png')
+
+plt.show()
+
+# NOTA: Python por defecto empieza a contar desde 0. SegÃºn hems definido las
+# funciones, los ORF 1 y +1 corresponden ambos a 0 sin poder diferenciarlos.
+
+############################## EJERCICIO 2#####################################
+# EJERCICIO 2.1
+# Vamos a definir una funciÃ³n que se llamarÃ¡ buscaGenes() que usando la funciÃ³n
+# buscaORFs_all() y aplicando un constraste de hipÃ³tesis basado en la longitud 
+# nos devuelva los ORFs que hayan pasado este contraste de hipÃ³tesis.
+
+def buscaGenes(sec, pvalor= 0.05):
+    orfs = buscaORFs_all(sec)
+    res = {}
+    for n in range(-3,3):
+        p = orfs[n]
+        length = long(p)
+        
+        for i in range(len(length)):
+            valor = length[i]
+            length_3 = valor/3
+            prob = (61/64)**(length_3-2)
+    
+            if prob <= pvalor:
+                res[n]= p[i]
+    
+    return(res)
+    
+genes_midna = buscaGenes(midna)
+
+# Dibujamos el histograma correspondiente al resultado:
+gen_long = {}
+
+for n in range(-3,3):
+    values = genes_midna[n]
+    gen_long[n] = abs(values[0]-values[1])
+
+
+import matplotlib.pyplot as plt
+
+plt.hist(list(gen_long.values()), rwidth = 0.95, 
+         histtype = 'bar')
+plt.xlabel('Longitud del gen')
+plt.ylabel('Frecuencia')
+plt.grid(True)
+plt.savefig('P7_4.png')
+
+plt.show()  
+    
+# EJERCICIO 2.3
+# Vamos a escribir una funciÃ³n que nos indique si os genes que se han 
+# encontrado con buscaGenes() realmente lo son. Esto lo harÃ¡ mirando si estos
+# genes se encuentran en la variable genoma (el genoma anotado)
+
+def compGenes(res_buscaGenes, genoma_anotado):
+#    Vamos a extraer la informaciÃ³n de la localizaciÃ³n de los genes del 
+#    genoma anotado a partir de su descripciÃ³n y usando .find()
+    
+    loc_anotado_comp = []
+    for n in range(len(genoma_anotado)):
+        gen = genoma_anotado[n]
+        st = gen.description.find('(')
+        end = gen.description.find(')]')
+        location = gen.description[st:end]
+        loc_anotado_comp.append([location])
+    
+    loc_anotado = []
+    for i in range(len(genoma_anotado)):
+        gen = genoma_anotado[i]
+        st = gen.description.find('n=')
+        location = gen.description[st:]
+        loc_anotado.append([location])
+        
+#        Una vez sacadas las localizaciones de sus genes y divididas segÃºn se 
+#        encuentren en la cadena complementaria o no, miramos si Ã©stas 
+#        coinciden 
+    res = []
+    values = list(res_buscaGenes.values())
+    for a in range(len(values)):
+        gen_long = values[a]
+        
+        b = 0
+        while b<= len(loc_anotado_comp)-1:
+            if gen_long == loc_anotado_comp[b]:
+                res.append(['Coincide en complementaria', 
+                            loc_anotado_comp[b], gen_long])
+            
+            b = b+1
+        
+        g = 0
+        while g<= len(loc_anotado)-1:
+            if gen_long == loc_anotado[g]:
+                res.append(['Coincide en cadena normal', 
+                            loc_anotado[g], gen_long])           
+            g = g+1
+        
+    return(res)
+
+
+res = compGenes(genes_midna, genoma)
+
+################################ EJERCICIO 3 ##################################
+# EJERCICIO 3.1
+# Vamos a obtener ls modelos markovianos para algunos genes del genoma anotado.
+# Primero, vamos a aseleccoinar nuestros gnes de la variable genoma y los 
+# vamos a guardar en la variable misgenes:
+
+misgenes  = genoma[66:132]
+
+# Ahora, escribimos la funciÃ³n estimaMM() que nos estimarÃ¡ un modelo markoviano
+# de la secuencia que le indiquemos usando el alfabeto que nosotros le indiquemos
+from Bio.Alphabet import IUPAC
+alf = list(IUPAC.protein.letters) + ['*']
+ 
+def estimaModeloMarkov(sec, alf):
+    import pandas as pd
+#   Probabilidades iniciales
+    p = pd.Series(list(sec))
+    prob_inic = round(p.value_counts(normalize = True),2)
+       
+#    Matriz de transiciÃ³n
+    mat_rec = pd.DataFrame(0, columns = alf,index = alf)
+    matTra = pd.DataFrame(0, columns = alf, index = alf)
+    
+    for i in range(len(sec)-1):
+        mat_rec.loc[sec[i],sec[i+1]] = mat_rec.loc[sec[i],sec[i+1]] +1 
+    
+    for i in range(len(alf)):
+        letra = alf[i]
+        row = mat_rec.loc[letra,]
+        
+        if sum(row) == 0:
+            matTra[letra][letra] = 1
+        
+        else:
+            frec = row.divide(sum(row))
+            fila_T = matTra[letra:letra]
+            matTra = matTra.replace(fila_T, frec)
+ 
+    return(prob_inic, matTra)       
+        
+# EJERCICIO 3.3       
+# Una vez escrita la funciÃ³n que nos estima el modelo de Markov, vamos a 
+# escribir otra funciÃ³n que nos defina una secuencia con el modelo de Markov
+# de una secuencia 
+
+def secuenciaModeloMarkov (MM, tam):
+    import pandas as pd
+    import numpy as np
+    from numpy.random import choice
+    from Bio.Alphabet import IUPAC
+#    Definimos los parÃ¡metros
+    prob_inic = MM[0]
+    matTra = MM[1]
+    alf = list(prob_inic.keys())
+    alf_comp = list(IUPAC.protein.letters) + ['*']
+    sec = list(range(0,tam))
+    
+#    Primer elemento de la secuencia
+    elem_1 = choice(alf, p = prob_inic)
+    sec[0] = elem_1
+    
+#    Definimos el resto de la secuencia
+    for ii in range(1,tam):
+        letra_ant = sec[ii-1]
+        prob = matTra.loc[letra_ant,]
+        sec[ii] = choice(alf_comp, p = prob)
+       
+    return(sec)
+    
+
+    
+    
+        
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
