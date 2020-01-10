@@ -1,0 +1,291 @@
+
+################################# PRÃCTICA 5 ##################################
+# NOTA PREVIA: En esta prÃ¡ctica se van a hacer grÃ¡ficas de los datos. Para ello,
+# usaremos la librerÃ­a "Matplotlib". Para instalarlo sÃ³lo hace falta
+# ejecutar os siguientes comandos en la terminal:
+# python -m pip install -U pip
+# python -m pip install -U matplotlib
+
+# EJERCICIO 1.2
+# Comenzamos descargando el ADN completo de la mitocondria humana (NC_012920.1)
+# y la guardamos en la variable mitoseq
+
+from Bio import SeqIO ##Cargamos el paquete que nos permite leer los archivos
+from Bio.Seq import Seq
+
+record = SeqIO.read("mitoseq_hs.fasta", "fasta") 
+mitoseq = record.seq
+
+# Seleccionamos 237 nucleÃ³tidos a partir de la posiciÃ³n 237 y guardamos la 
+# secuencia en la variable mi_mitoseq
+
+mi_mitoseq = mitoseq[237:474]
+s_mi_mitoseq = str(mi_mitoseq)
+# Ahora vamos a traducir la secuencia con dos cÃ³digos genÃ©ticos distintos: el
+# cÃ³digo genÃ©tico estÃ¡ndar y en cÃ³digo genÃ©tico de la mitocondria. Para ello
+# indicamos en el comando .trasnlate() la tabla que queremos usar, es decir, el
+# cÃ³digo genÃ©tico que queremos usar. 
+
+from Bio.Data import CodonTable
+#CÃ³digo genÃ©tico estÃ¡ndar
+strandar_table = CodonTable.unambiguous_dna_by_name["Standard"]
+# CÃ³digo genÃ©tico mitocondrial
+mito_table = CodonTable.unambiguous_dna_by_name["Vertebrate Mitochondrial"]
+
+CodStd = str(mi_mitoseq.translate())
+CodMit = str(mi_mitoseq.translate(table = "Vertebrate Mitochondrial"))
+
+# Ahora vamos a estudiar las diferencias que tienen estas dos secuencias usando
+# un bucle while:
+
+Dif_tr = [] #lista donde vamos a guardar las diferencias entre las traducciones
+
+# Variables que nos van a permitir movernos por las traducciones
+s = 0  #Para la traducciÃ³n estÃ¡ndar
+m = 0  #Para la traducciÃ³n mitocondrial
+
+while s<=len(CodStd)-1 and m<=len(CodMit)-1:
+    if CodStd[s] != CodMit[m]:
+        Dif_tr.append([s,CodStd[s],CodMit[m]])
+    
+    s = s+1
+    m = m+1
+
+# EJERCICIO 1.3
+# Ahora en vez de obtener la posiciÃ³n de la diferencia, vamos a obtener el 
+# codÃ³n que les diferencia 
+Dif_tr_pos = []
+s = 0  #Para la traducciÃ³n estÃ¡ndar
+m = 0  #Para la traducciÃ³n mitocondrial
+
+while s<=len(CodStd)-1 and m<=len(CodMit)-1:
+    codon = str(s_mi_mitoseq[s:s+3])
+    if CodStd[s] != CodMit[m]:
+        Dif_tr_pos.append([codon,CodStd[s],CodMit[m]])
+    
+    s = s+1
+    m = m+1
+
+# EJERCICIO 1.4
+# Vamos a representar las diferencias entre las traducciones en un diagrama de
+# sectores, usando la librerÃ­a Matplotlib (ver la nota al comienzo de la prÃ¡ctica)
+# Cargamos Matplotlib 
+
+import matplotlib.pyplot as plt
+
+# Lo que vamos a representar el la secuencia completa de la mitocondria de humano
+# (mitoseq) en funciÃ³n de su composiciÃ³n de bases. Primero, contamos las bases
+# de la secuencia: 
+
+l_mitoseq = list(mitoseq)
+
+count = [l_mitoseq.count('A'),l_mitoseq.count('T'),
+         l_mitoseq.count('C'), l_mitoseq.count('G')]
+
+labels = 'A', 'T', 'C', 'G'
+sizes = count
+colors = ['gold', 'yellowgreen', 'lightcoral', 'lightskyblue']
+plt.pie(sizes, labels=labels, colors=colors,
+autopct='%1.1f%%', shadow=True, startangle=140)
+plt.axis('equal')
+plt.savefig('fig1.png',format = 'png')
+
+plt.show()
+
+# EJERCICIO 1.5
+# Ahora vamos a representar en un digrama de sectores las parejas de bases 
+# nitrogenadas (A+T y C+G). Para ello obtenemos primero estos valores:
+
+count_par = [count[0]+count[1],count[2]+count[3]]
+
+labels = 'A+T', 'C+G'
+sizes = count_par
+colors = ['gold', 'lightskyblue']
+plt.pie(sizes, labels=labels, colors=colors,
+autopct='%1.1f%%', shadow=True, startangle=140)
+plt.axis('equal')
+plt.savefig('fig2.jpg',format = 'jpg')
+
+plt.show()
+
+########################### EJERCICIO 2 #######################################
+# EJERCICIO 2.1
+# Vamos a estudiar el %GC el genoma anotado de la mitocondria humana. Para ello
+# nos descragamos la secuencia de NCBI y guardamos los genes en la variable 
+# mitogen
+
+record = list(SeqIO.parse("hs_mitogen.fasta", "fasta")) 
+
+mitogen = []
+for n in range(len(record)):
+    temp = record[n].seq
+    mitogen.append(temp)
+
+# Para calcular %GC de los genes, vamos a usar una funciÃ³n de Biopython, GC().
+
+from Bio.SeqUtils import GC
+
+# Ahora construimos el bucle while que nos permitirÃ¡ calcularlo en todos los genes
+
+mitoGC = []
+i = 0
+while i<=len(mitogen)-1:
+    con_GC = GC(mitogen[i])
+    mitoGC.append(con_GC)
+    
+    i = i+1
+
+# Representamos los resultados obtenidos en un grÃ¡fico de puntos
+
+import matplotlib.pyplot as plt
+
+
+plt.plot(range(len(mitogen)), mitoGC, 'r-o')
+plt.xlabel('Gen')
+plt.ylabel('%GC')
+plt.title('Contenido GC de mitogen')
+plt.show()
+
+# Ahora vamos a ordenar el porcentaje GC y lo representamos en la misma grÃ¡fica:
+sort_mitoGC = sorted(mitoGC)
+x = range(len(mitogen))
+
+plt.plot(x, mitoGC, 'r')
+plt.plot(x, sort_mitoGC, 'bo')
+plt.xlabel('Gen')
+plt.ylabel('%GC')
+plt.title('Contenido GC de mitogen')
+plt.legend()
+plt.savefig('fig4.png',format='png')
+plt.show()
+
+# EJERCICIO 2.2
+# Hacemos lo mismo, pero con el genoma de Mitocondria neandertal
+
+record = list(SeqIO.parse("hn_mitogen.fasta", "fasta")) 
+
+mitonea = []
+for n in range(len(record)):
+    temp = record[n].seq
+    mitonea.append(temp)
+
+# Para calcular %GC de los genes, vamos a usar una funciÃ³n de Biopython, GC().
+
+from Bio.SeqUtils import GC
+
+# Ahora construimos el bucle while que nos permitirÃ¡ calcularlo en todos los genes
+
+mitoGCnea = []
+i = 0
+while i<=len(mitonea)-1:
+    con_GC = GC(mitonea[i])
+    mitoGCnea.append(con_GC)
+    
+    i = i+1
+
+# Representamos los resultados obtenidos en un grÃ¡fico de puntos
+
+import matplotlib.pyplot as plt
+sort_mitoGCnea = sorted(mitoGCnea)
+
+x = range(len(mitonea))
+
+plt.plot(x, mitoGCnea, 'r')
+plt.plot(x, sort_mitoGCnea, 'bo')
+plt.xlabel('Gen')
+plt.ylabel('%GC')
+plt.title('Contenido GC de mitonea')
+plt.legend()
+plt.savefig('fig5.png',format='png')
+plt.show()
+
+############################### EJERCICIO 3 ###################################
+# EJERCICIO 3.1
+# Trabajamos con la variable record, donde tenemos al completo el fichero fasta. 
+# Escribimos un bucle for() que nos va a introducir en una lista de listas la
+# siguiente estructura:
+#                       [nombre del gen, A,C,G,T]
+# Esta lista de listas se va a llamar mitoneannn y se va a componer de 4 columnas
+# y 13 filas (nÃºmero de genes)
+
+mitoneannn = [['nombre del gen','A','C','G','T']]
+
+for i in range(len(record)):
+    temp = record[i]
+    name = temp.name
+    A = temp.seq.count('A')
+    C = temp.seq.count('C')
+    G = temp.seq.count('G')
+    T = temp.seq.count('T')
+    
+    mitoneannn.append([name, A, C, G, T])
+
+# Ahora vamos a construir una lista de listas donde cada sublista va a contener
+# el nombre del gen, el nucleÃ³tido mÃ¡s abundante y cuÃ¡ntos tiene. Toda esta 
+# informaciÃ³n la guardamos en la variable mitoneamax.
+    
+mitoneamax = []
+
+for i in range(len(mitoneannn)):
+    temp = mitoneannn[i]
+    name = temp[0]
+    nnn = temp[1:5]
+    max_nnn = max(nnn)
+    index_max = nnn.index(max(nnn))
+    
+    if index_max== 0:
+        mitoneamax.append([name, 'A', max_nnn])
+    if index_max== 1:
+        mitoneamax.append([name, 'C', max_nnn])
+    if index_max== 2:
+        mitoneamax.append([name, 'G', max_nnn])
+    if index_max== 3:
+        mitoneamax.append([name, 'T', max_nnn])
+    
+# EJERCICIO 3.2
+# Repetimos el apartado anterior, pero con dos cambios: usamos el genoma anotado
+# de la mitocondria humana y usamos un buble while en vez de un bucle for. El
+# resultado va a ser el mismo, una lista de listas compuesta por el nombre del
+# del gen y su composiciÃ³n de bases
+        
+mitohumnnn = [['nombre del gen','A','C','G','T']]
+
+i = 0
+
+while i<= len(record)-1:
+    temp = record[i]
+    name = temp.name
+    A = temp.seq.count('A')
+    C = temp.seq.count('C')
+    G = temp.seq.count('G')
+    T = temp.seq.count('T')
+    
+    mitohumnnn.append([name, A, C, G, T])
+    
+    i = i+1
+
+# Vamos a construir una lista de listas donde se recoja la base mÃ¡s abundante 
+# en cada gen, al igual que en el apartado anterior, pero usando un bucle 
+# while
+
+mitohummax = []
+
+i = 0
+
+while i<=len(mitohumnnn)-1:
+    temp = mitohumnnn[i]
+    name = temp[0]
+    nnn = temp[1:5]
+    max_nnn = max(nnn)
+    index_max = nnn.index(max(nnn))
+    
+    if index_max== 0:
+        mitohummax.append([name, 'A', max_nnn])
+    if index_max== 1:
+        mitohummax.append([name, 'C', max_nnn])
+    if index_max== 2:
+        mitohummax.append([name, 'G', max_nnn])
+    if index_max== 3:
+        mitohummax.append([name, 'T', max_nnn])
+    
+    i = i+1
