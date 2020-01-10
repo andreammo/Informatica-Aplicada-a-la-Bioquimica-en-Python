@@ -1,0 +1,329 @@
+
+######################## PRÃCTICA 4, EJERCICIO 1 ##############################
+# EJERCICIO 1.1
+# Comenzamos leyendo el fichero fasta y guardando el genoma completo en la 
+# variable "dna":
+
+from Bio import SeqIO ##Cargamos el paquete que nos permite leer los archivos
+from Bio.Seq import Seq
+
+dna = SeqIO.read("mycoplasma_bac.fasta", "fasta")
+
+# Ahora seleccionamos 100 nucleÃ³tidos a partir de la posiciÃ³n 123 y los 
+# gurdamos en la variable "mi_dna"
+
+dna_seq = list(dna.seq)
+mi_dna = dna_seq[123:223]
+
+# Buscamos las posiciones donde se encuentran las guaninas ("G") y las 
+# guardamos en la lista "donde_g"
+
+donde_g = []
+for i in range(len(mi_dna)):
+    if mi_dna[i] == 'G':
+        donde_g.append(i)
+
+print(donde_g)
+
+# Buscamos estas posiciones usando el comando np.where y comprobamos que ambas
+# listas son iguales
+
+import numpy as np
+x = np.array(mi_dna)
+donde_g_where = np.where(x == 'G')
+
+# Comprobamos que ambos resultados son inguales
+
+print(donde_g, donde_g_where)
+
+#Ahora hacemos lo mismo pero para las demas bases:
+ 
+# Para las adeninas ('A')
+# Usando for/if
+donde_a = []
+for i in range(len(mi_dna)):
+    if mi_dna[i] == 'A':
+        donde_a.append(i)
+        
+# Usando np.where
+donde_a_where = np.where(x == 'A')
+
+#Comprobamos
+print(donde_a, donde_a_where)
+
+# Para las timinas ('T')
+# Usando for/if
+donde_t = []
+for i in range(len(mi_dna)):
+    if mi_dna[i] == 'T':
+        donde_t.append(i)
+        
+# Usando np.where
+donde_t_where = np.where(x == 'T')
+
+#Comprobamos
+print(donde_t, donde_t_where)
+
+# Para las citosinas ('C')
+# Usando for/if
+donde_c = []
+for i in range(len(mi_dna)):
+    if mi_dna[i] == 'C':
+        donde_c.append(i)
+        
+# Usando np.where
+donde_c_where = np.where(x == 'C')
+
+#Comprobamos
+print(donde_c, donde_c_where)
+
+# EJERCICIO 1.2
+# Guardamos en la variable "otro_dna" 932 nucleÃ³tidos a partir de la posiciÃ³n
+# 1230, lo traducimos a aminoÃ¡cidos y guardamos el resultado en "t_otro_dna"
+
+otro_dna = dna.seq[1230:2153]
+t_otro_dna = list(otro_dna.translate())
+
+# Buscamos las posiciones de las metioninas ('M') usando for/if y guardamos el 
+# resultado en "donde_M"
+
+
+s_otro_dna = str(otro_dna)
+donde_M = []
+
+for i in range(0,len(s_otro_dna),3):
+    codon = s_otro_dna[i:i+3]
+    if (codon=='ATG'):
+        donde_M.append(i)
+  
+# En este caso, al secuencia seleccionada no tiene metioninas, por lo que la 
+# lista sale vacÃ­a. Ahora vamos a comprobarlo buscando las M mediante 
+# np.where en t_otro_dna
+        
+import numpy as np
+ar_t_otro_dna = np.array(t_otro_dna)
+donde_M_where = np.where(ar_t_otro_dna == 'M')
+
+# Ahora vamos a realizar el mismo procedimiento, pero en este caso vamos a 
+# buscar los codones de Lys. Primero vamos a ver qÃºe codones son los que 
+# codifican para este aminoÃ¡cido
+
+from Bio.Data import CodonTable
+standard_table = CodonTable.unambiguous_dna_by_name["Standard"]
+print(standard_table)
+
+# Una vez identificados los codones, escribimos el bucle for/if
+
+donde_K = []
+for i in range(0,len(s_otro_dna),3):
+    codon = s_otro_dna[i:i+3]
+    if codon == 'AAA' :
+        donde_K.append(i)
+    if codon == 'AAG' :
+        donde_K.append(i)
+        
+# Comprobamos con np.where si el resultado obtenido es correcto         
+import numpy as np
+ar_t_otro_dna = np.array(t_otro_dna)
+donde_L_where = np.where(ar_t_otro_dna == 'K')
+
+# EJERCICIO 1.3
+#  Hacemos el mismo procedimiento que el realizado en el apartado anterior (1.2)
+donde_L = []
+
+for i in range(0,len(s_otro_dna),3):
+    codon = s_otro_dna[i:i+3]
+    if codon == 'TTA' :
+        donde_L.append(i)
+    if codon == 'TTG' :
+        donde_L.append(i)
+    if codon == 'CTT' :
+        donde_L.append(i)
+    if codon == 'CTA' :
+        donde_L.append(i)
+    if codon == 'CTC' :
+        donde_L.append(i)
+    if codon == 'CTG' :
+        donde_L.append(i)
+
+# Comprobamos con np.where si el resultado obtenido es correcto         
+import numpy as np
+ar_t_otro_dna = np.array(t_otro_dna)
+donde_L_where = np.where(ar_t_otro_dna == 'L')
+
+
+############################# EJERCICIO 2 #####################################
+# EJERCICIO 2.1
+# Comenzamos guardando la variable "adn" los 300 nucleÃ³tidos que se encuentran 
+# a partir de la posiciÃ³n 3210 y comprobamos su tamaÃ±o
+
+adn = str(dna.seq[3210:6210])
+print(len(adn))
+
+# Buscamos todos los codones de metionina en todos los ORF, para ello no
+# especificamos en range que nos divida la secuencia en grupos de 3
+donde_Met = []
+
+for i in range(0,len(adn)):
+    codon = adn[i:i+3]
+    if codon == 'ATG':
+        donde_Met.append(i)
+        
+# Comparamos el resultado con np.where, obteniendo:
+seq_adn = dna.seq[3210:6210]
+t_adn = seq_adn.translate()
+
+import numpy as np
+ar_adn = np.array(t_adn)
+donde_Met_where = np.where(ar_adn == 'M')
+
+#Ahora vamos a ver la relaciÃ³n que hay entre las posiciones obtenidas y el ORF.
+# Para ello, obtenemos el resto de dividir las posiciones entre 3 y estudiamos
+# dicha relaciÃ³n:
+
+res_donde_Met = [i%3 for i in range(len(donde_Met))]
+print(res_donde_Met,donde_Met,adn)
+
+# Si estudiamos las posiciones de las metioninas y el resto de dividir entre 
+# 3 vemos que esta es la relaciÃ³n que guardan: 
+# ORF +1 : i%3 = 1
+# ORF +2 : i%3 = 2
+# ORF +3 : i%3 = 0
+
+# Escribimos una funciÃ³n que nos indique el ORF en cada caso:
+
+def ORF_codon(pos):
+    res = [ i%3 for i in range(len(pos))]
+    ORF = []
+    
+    for n in res:
+        if n == 1 :
+            ORF.append('+1')
+        if n == 2:
+            ORF.append('+2')
+        if n == 0:
+            ORF.append('+3')
+    
+    return(ORF)
+
+# EJERCICIO 2.2
+# Realizamos lo mismo que en ejercicio 2.1, pero esta vez para los codones Stop
+
+#Buscamos las posiciones del codon en adn
+    
+donde_Stop = []
+
+for i in range(len(adn)):
+    codon = adn[i:i+3]
+    if codon == 'TAA':
+        donde_Stop.append(i)
+    if codon == 'TAG':
+        donde_Stop.append(i)
+    if codon == 'TGA':
+        donde_Stop.append(i)
+
+# Ahora vemos el ORF que le corresponde aplicando la funciÃ³n 
+# ORF_codon
+
+ORF_codon(donde_Stop)
+
+############################## EJERCICIO 3 ####################################
+# EJERCICIO 3.1
+# Escribimos la funciÃ³n que nos permitirÃ¡ obtener la cadena complementaria de adn
+# usando for/if
+
+c_adn = adn[0:10]
+
+def mi_comp(seq)
+comp = []
+for i in seq:
+    if i == 'A':
+        comp.append('T')
+    if i == 'T':
+        comp.append('A')
+    if i == 'C':
+        comp.append('G')
+    if i == 'G':
+        comp.append('C')
+
+# Comprobamos si el bucle escrito nos ha dado el resultado correcto usando el 
+# comando .complement
+
+from Bio.Seq import Seq
+
+s_adn = dna.seq[3210:3220]
+comp_adn = s_adn.complement()
+print(comp, comp_adn)
+
+# Vamos a buscr las metioninas de esta cadena complementaria en el resultado
+# obtenido de usar .complement por compatibilidad de tipos de variable
+
+s_comp_adn = str(comp_adn)[::-1] #NOTA: pasamos la secuencia al sentido 5'-3'
+
+donde_M_comp = []
+
+
+for i in range(0,len(s_comp_adn),3):
+    codon = s_comp_adn[i:i+3] 
+    if codon == 'ATG':
+        donde_M_comp.append(i)
+
+# En este caso, la lista se encuentra vacÃ­a porque no hay metioninas en la 
+# cadena 
+# Comprobamos el resultado obtenido traduciendo a aminoÃ¡cidos la cadena c
+# complementaria
+
+aa_comp_adn_5_3 = comp_adn[::-1].translate()
+print(aa_comp_ad_5_3.count('M'))
+
+
+# Escribimos la funciÃ³n que nos permite determinar el ORF de la cadena compl
+def ORF_codon_comp(pos):
+    res = [ i%3 for i in range(len(pos))]
+    ORF = []
+    
+    for n in res:
+        if n == 1 :
+            ORF.append('-1')
+        if n == 2:
+            ORF.append('-2')
+        if n == 0:
+            ORF.append('-3')
+    
+    return(ORF)
+
+# EJERCICIO 3.2
+# Vamos a escribir un cÃ³digo que nos proporciones las posiciones Stop de 
+# comp_adn sin invertir usando while y las guarde en la variable donde_Stop_comp 
+
+seq_comp_adn = seq_adn.complement()
+str_comp = str(seq_comp_adn)
+
+adn = seq_comp_adn[::-1]
+t_53_adn = adn.translate()
+print(t_53_adn.count('Stop'))
+
+
+donde_Stop = []
+i = len(str_comp)-1
+
+while i >= 2 :
+    if i>2:
+        codon = str_comp[i:i-3:-1]
+        if codon == 'TAA':
+            donde_Stop.append(i)
+        if codon == 'TAG':
+            donde_Stop.append(i)
+        if codon == 'TGA':
+            donde_Stop.append(i)
+    else: 
+        codon = str_comp[2::-1]
+        if codon == 'TAA':
+            donde_Stop.append(i)
+        if codon == 'TAG':
+            donde_Stop.append(i)
+        if codon == 'TGA':
+            donde_Stop.append(i)
+    
+    i = i-1
+    
