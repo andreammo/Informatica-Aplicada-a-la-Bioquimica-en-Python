@@ -1,0 +1,398 @@
+@author: andrea
+"""
+####################### PRÃCTICA 3 - EJERCICIO 1 ##############################
+# Comenzamos leyendo el fichero fasta con el que vamos a trabajar. En este caso
+# se trata del DNA del virus del Herpes en humanos (cÃ³digo RefSeq NC_001348.1).
+# Como se trata de un fichero con una sola secuencia, usamos la funciÃ³n 
+# SeqIO.read() [mÃ¡s detalladamente explicado en 2_BD_biologicas_FASTA_reader.py]
+
+# Pero antes de todo, para poder trabajar con las secuencias en distintos tipos
+# de variables, es necesario descargarse otro paquete: pandas. Este paquete nos 
+# permitirÃ¡ analizar los datos de las secuencias. 
+
+import numpy as np
+import pandas as pd
+
+# Ahora importamos los paquetes de Biopython
+from Bio.Seq import Seq
+from Bio import SeqIO
+record = SeqIO.read("herpes_virus.fasta", "fasta")
+
+#EJERCICIO 1.1.1
+# Para poder usar el comando .replace, la variable tiene que ser del tipo string
+# por lo que la cambiamos a dicha variable
+seq_virus = str(record.seq)
+
+rna_virus = seq_virus.replace('T', 'U')
+
+# Ahora, pasamos la variable rna_virus a tipo Seq Object con el comando .toseq()
+
+seq_rna_virus = Seq(rna_virus)
+
+#EJERCICIO 1.1.2
+# Para pasar la variable rna_virus a lista usamos el siguiente comando:
+
+list_rna = list(rna_virus) # Usamos la variable de tipo string por facilidad
+
+print (len(list_rna) == len(rna_virus))
+
+#EJERCICIO 1.1.3
+# Para extraer una sublista de dentro de la lista usamos los corchetes:
+
+sublist_rna = list_rna[100 : 120]
+print(type(sublist_rna), len(sublist_rna))
+
+#EJERCICIO 1.1.4
+# Por defecto, en Python no existen las variables de tipo vector. Es por ello 
+# pasamos esta variable a tipo string como ya hemos realizado en el 
+# ejercicio 1.1.1
+
+substring_rna = str(sublist_rna)
+print(type(substring_rna))
+
+# EJERCICIO 1.1.5 
+# Como se encuentran en mayÃºscula, vamos a pasarlos a minÃºscula con el siguiente
+# comando:
+
+print(substring_rna.lower())
+
+# EJERCICIO 1.2
+#Extraemos un substring de la variable rna_virus, variable del tipo string
+
+mi_list_rna = list_rna [123 : (123+123)]
+print(type(mi_list_rna), len(mi_list_rna))
+
+# EJERCICIO 1.2.1
+# Para poder hacer una variable del tipo factor, vamos a usar el paquete pandas.
+
+mi_factor_rna = pd.Series(mi_list_rna, dtype="category")
+print(type(mi_factor_rna), mi_factor_rna)
+
+#EJERCICIO 1.2.2
+# Para poder hacer un recuento de las bases y disponerlas en forma de tabla
+# usamos los comandos p.DataFrame y .count()
+table_u = pd.DataFrame({'A' : mi_list_rna.count('A'),
+                      'U' : mi_list_rna.count('U'),
+                      'G' : mi_list_rna.count('G'),
+                      'C' : mi_list_rna.count('C')}, index =[0])
+# NOTA: es necesario indicarle que sÃ³lo queremos una fila (index =[0]), por el
+# contrario no nos dejarÃ¡ hacer la tabla. 
+print(table_u)
+
+# Para calcular el porcentaje de uracilos en table:
+
+porcentaje_u = (table_u.at[0,'U'])/len(mi_list_rna)
+print(porcentaje_u)
+
+# Seguimos el mismo procedimiento que antes para calcular el porcentaje gc
+
+table_gc = pd.DataFrame({'A' : substring_rna.count('A'),
+                         'U' : substring_rna.count('U'),
+                         'G' : substring_rna.count ('G'),
+                         'C' : substring_rna.count('C')}, index = [0])
+print(table_gc)
+
+porcentaje_gc = (table_gc.at[0,'G']+table_gc.at[0,'C'])/len(substring_rna)
+print(porcentaje_gc)
+
+#EJERCICIO 1.2.3
+# Para cambiar los uracilos de mi_factor_rna por timinas para asÃ­ formar 
+# mi_factor_dna sÃ³lo hay que usar el comando .replace()
+
+mi_factor_dna = mi_factor_rna.replace('U', 'T')
+print(mi_factor_dna)
+
+# EJERCICIO 1.2.4
+# Para traducir la secuencia, vamos a extraer de nuevo mi_vector_rna debido a 
+# incompatibilidades de formato entre los strings obtenidos de una lista y la
+# funciÃ³n .translate()
+
+mi_seq_rna = Seq(rna_virus[123 : (123+123)]) # No olvidar pasar a SeqObject 
+                                             # para que .translate funcione                                          
+
+mi_seq_aa = mi_seq_rna.translate()
+
+mi_factor_aa = pd.Series(list(mi_seq_aa), dtype = 'category') 
+print(mi_factor_aa)
+#IMPORTANTE: para poder pasar una variable a factor, esta tiene que estar en 
+# formato lista
+
+# EJERCICIO 1.2.5
+# Para obtener el diccionario de aminoÃ¡cidos que proporciona Biopython hacemos
+# lo siguiente:
+from Bio.Alphabet import IUPAC
+IUPAC.protein.letters
+
+# Para hacer una tabla de frecuencia usamos la funciÃ³n pd.crosstab(). Esta
+# tiene dos argumentos principales: pd.crosstab(index, columns). En index 
+# ponemos lo que queremos contar (en este caso, mi_factor_aa) y en columns los
+# elementos que queremos contar dentro de la variable (en este caso los aa, es
+# decir, IUPAC.protein.letter). Como resultado:
+
+mi_tabla_aa = pd.crosstab(index = mi_factor_aa, columns = IUPAC.protein.letters )
+print (mi_tabla_aa)
+
+# EJERCICIO 1.2.6
+# Para poner el factor mi_factor_aa en minÃºscula usamos la funciÃ³n .lower()
+# quedando de la siguiente manera:
+pd.Series(list(mi_seq_aa.lower()), dtype = 'category')
+
+
+# EJERCICIO 1.2.7
+# Para calcular el porcentaje de aa hidrofÃ³bicos, primero contamos cuantos hay
+# usando la variable en formato lista para poder aplicar .count: 
+aa_hidrofob = (list(mi_seq_aa).count('A') +
+                list(mi_seq_aa).count('V') +
+                list(mi_seq_aa).count('L') +
+                list(mi_seq_aa).count('I') +
+                list(mi_seq_aa).count('M') +
+                list(mi_seq_aa).count('F') +
+                list(mi_seq_aa).count('P') +
+                list(mi_seq_aa).count('W') )
+
+#Calculamos el porcentaje con la siguiente operaciÃ³n: 
+porcentaj_hidrofob = (aa_hidrofob / len(mi_seq_aa))*100
+print(porcentaj_hidrofob)
+
+# EJERCICIO 1.3
+# Leemos el archivo .fasta que contiene los genes del virus Varicella Zooster
+# y guardamos las secuencias en una variable de tipo lista
+from Bio import SeqIO
+
+list_genes = list(SeqIO.parse("varicella_virus.fasta", "fasta"))
+
+# Ahora obtenemos las longitudes de los genes y las guardamos en la variable
+# genes_len, usando la funciÃ³n .map(). Esta funciÃ³n nos permite aplicar otra 
+# funciÃ³n a los elementos de una variable:
+
+genes_len = pd.Series(list_genes).map(len)
+
+# Para obtener las longitudes mÃ¡xima y mÃ­nima aplicamos las 
+# funciones .max() y .min(), respectivamente:
+
+genes_len.max ()
+genes_len.min()
+
+# Para obtener la media y la mediana de genes_len aplicamos las siguientes 
+# funciones:
+
+genes_len.mean()        # Para calcular la media
+genes_len.median()      # Para calcular la mediana
+
+# EJERCICIO 1.3.1
+# Para obtener el Ã­ndice de las secuencias que tienen mayor y menor longitud
+# aplicamos:
+
+genes_len.idmax()     # Para obtener el Ã­ndice de la secuencia de mayor tamaÃ±o
+genes_len.idmin()     # Para obtener el Ã­ndice de la secuencia de menor tamaÃ±o
+
+# EJERCICIO 1.3.2
+# Para ordenar los elementos en orden ascendente y descendente:
+
+genes_len.sort_values(ascending = True) # Orden ASCENDENTE
+genes_len.sort_values(ascending = False) # Orden DESCENDENTE
+
+# EJERCICIO 1.3.3
+# Para obtener un array con las longitudes de los genes sin que haya elementos
+# repetidos aplicamos la funciÃ³n .unique()
+
+genes_len.unique()
+
+len(genes_len.unique())
+
+######################### PRÃCTICA 3, EJERCICIO 2 #############################
+# EJERCICIO 2.1
+# Para buscar las guaninas de mi_factor_rna, usamos la siguiente funciÃ³n:
+mi_factor_rna[mi_factor_rna == 'G'].index[0:]
+
+
+######################### PRÃCTICA 3, EJERCICIO 3 #############################
+# Leemos el archivo fasta donde se encuentra la secuencia del genoma del 
+# virus Heterosigma y la guardamos en la variable virus__dna
+
+from Bio import SeqIO ##Cargamos el paquete que nos permite leer los archivos
+from Bio.Seq import Seq
+
+virus_record = SeqIO.read("heterosigma_virus.fasta", "fasta")
+
+virus_dna = virus_record.seq
+
+#Ahora pasamos la secuencia de DNA a RNA con la funciÃ³n .transcribre()
+# y la guardamos en la variable virus_rna
+
+virus_rna = virus_dna.transcribe()
+
+# EJERCICIO 3.2
+# En Python, no existen las variables de tipo matriz, por lo que vamos a usar
+# un tipo de variable muy semejante: las listas de listas.Como lo que buscamos
+# es una matriz de tres columnas rellenadas por filas, nuestra lista de listas
+# serÃ¡ de la siguiente manera:
+# matrix_rna  = [[1,2,3], [4,5,6], [7,8,9]...]
+# Ls nÃºmero represetan las bases de la secuencia. Cada sublista va a ser una 
+# fila y cada elemento de la sublista, la columna. De esta forma obtenemos:
+
+list_rna = list(virus_rna)
+
+# Definimos las dimensiones que queremos:
+row = 2862 
+col = 3
+
+matrix_rna = [list_rna[col*i:col*(i+1)] for i in range (row)]
+
+# Para extraer la fila que queramos, sÃ³lo hay que extraer la sublista que se 
+# encuentra en dicha posiciÃ³n. Por lo que:
+
+fila_10 = matrix_rna[10]
+print(fila_10)
+
+# Extraemos las filas [40:43]
+filas_a = matrix_rna[41:44] #RECUERDA: Python empieza a contar desde 0
+
+# Para poder contar las adeninas de estas filas, es necesario poner la variable
+# en formato lista, no lista de listas. Es por ello que aplicamos esta funciÃ³n:
+
+output = []
+def eliminandoSublistas(l): 
+    for i in l: 
+        if type(i) == list: 
+            eliminandoSublistas(i) 
+        else: 
+            output.append(i) 
+
+# La lista se va a guardar en la variable "output"
+# Ahora ya podemos calcular las adeninas con el comando .count()
+            
+print(output.count('A'))
+
+# EJERCICIO 3.2
+# Para hacer una matriz de tres filas rellenadas por columnas, vamos a hacer la 
+# transpuesta de la lista de listas anterior. Para ello cargamos el paquete
+# numpy y ejecutamos lo siguiete:
+
+import numpy as np
+
+ma_matrix = np.array(matrix_rna)[np.newaxis]
+ma_matrix = ma_matrix.T
+
+
+#Ahora podemos extraer las columnas que deseemos de la siguiente manera:
+
+col_10_t = ma_matrix[10]
+
+cols_t = ma_matrix[34:37]
+
+######################### PRÃCTICA 3, EJERCICIO 4 #############################
+# EJERCICIO 4.1
+
+j_matrix_rna = [''.join(matrix_rna[i]) for i in range(len(matrix_rna))]
+
+
+indices = [i for i,x in enumerate(j_matrix_rna) if x=='GAU']
+
+ 
+
+######################### PRÃCTICA 3, EJERCICIO 5 #############################
+# EJERCICIO 5.1
+# Leemos el archivo fasta donde se encuentra la secuencia del genoma del 
+# virus Ebolavirus Zaire y la guardamos en la variable virus
+
+from Bio import SeqIO ##Cargamos el paquete que nos permite leer los archivos
+from Bio.Seq import Seq
+
+virus = list(SeqIO.parse("aa_zaire_virus.fasta", "fasta"))
+
+# Seleccionamos el gen nÃºmero 3 de la variable virus y la guardamos en virus_3
+
+virus_3 = virus[3]
+
+# Una vez seleccionado, obtenemos la informaciÃ³n que buscamos
+
+print( "Longitud: ", len(virus_3.seq),
+       "Nombre: ", virus_3.name,
+       "ProteÃ­na: ", virus_3.description)
+
+# EJERCICIO 5.2
+# Para obtener una lista con todos los noombres de las proteÃ­nas de la secuencia
+# usamos el siguiente bucle for:
+
+prot_name = []
+for i in range(len(virus)):
+    x = virus[i]
+    prot_name.append(x.name)
+    
+# EJERCICIO 5.3
+# Primero vamos a extraer las secuencias de aminoÃ¡cidos de todos las proteÃ­nas
+# de la misma forma que hemos extraÃ­do los nombres de las proteÃ­nas en el 
+# apartado anterior
+
+prot_aa = []
+for i in range(len(virus)):
+    x = virus[i]
+    prot_aa.append(list(x.seq))
+
+# Comenzamos buscando los aminoÃ¡cidos esenciales, no esenciales, hidrofÃ³bicos
+# y no hidrofÃ³bicos. Primero, definimos dichos aminoÃ¡cidos:
+    
+esenc = ['F','I', 'L','K', 'M', 'T', 'W','V','H']
+noese = ['A','Y', 'D','C', 'E', 'Q', 'G','P','S','N', 'R']
+nopol = ['F','A','L','M','I','W','P','V']
+polar = ['C','N','G','S','Q','Y','T']
+
+# Ahora buscamos cuÃ¡ntos aminoÃ¡cidos de cada tipo hay en cada gen. Para ello, 
+# definimos un bucle for que vaya por cada gen y que, ademÃ¡s, va a realizar 
+# todas las comparaciones posibles entre dicho gen y los aminoacidos que hemos
+# definido. Para saber cuÃ¡ntos aminoÃ¡cidos tenemos, sÃ³lo tenemos que contar 
+# cuÃ¡ntos True tenemos y este nÃºmero es el que buscamos. Este procedimiento se
+# repite en todos los casos.
+num_esenc = []
+for i in range(len(prot_aa)):
+    import itertools
+    compare = [a == b for (a,b) in itertools.product(prot_aa[i], esenc)]
+    num = compare.count(True)
+    num_esenc.append(num)
+
+num_noese = []
+for i in range(len(prot_aa)):
+    import itertools
+    compare = [a == b for (a,b) in itertools.product(prot_aa[i], noese)]
+    num = compare.count(True)
+    num_noese.append(num)
+
+
+num_nopol = []
+for i in range(len(prot_aa)):
+    import itertools
+    compare = [a == b for (a,b) in itertools.product(prot_aa[i], nopol)]
+    num = compare.count(True)
+    num_nopol.append(num)    
+
+num_polar = []
+for i in range(len(prot_aa)):
+    import itertools
+    compare = [a == b for (a,b) in itertools.product(prot_aa[i], polar)]
+    num = compare.count(True)
+    num_polar.append(num)
+
+# Ahora construimos la tabla con todos los nÃºmeros de aminoÃ¡cidos. Primero,
+# agrupamos en una lista los datos que queremos poner en la tabla:
+
+data = [num_esenc , num_noese, num_nopol, num_polar]
+      
+import pandas as pd
+
+df_data = pd.DataFrame(data, index = ['esenc','noese',
+                                    'nopol','polar'], columns = prot_name )
+
+
+        
+    
+
+
+
+
+
+
+
+
+
+
