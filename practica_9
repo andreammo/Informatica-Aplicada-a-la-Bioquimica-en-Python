@@ -80,7 +80,7 @@ alignments = aligner.align(seq1, seq2)
 
 print(alignments[0], score)
 
-############################# EJERCICIO 2 #####################################
+############################# EJERCICIO 2 ####################################
 # EJERCICIO 2.1
 # Vamos a alinear la secuencias virus_1 y virus_3 usando la funciÃ³n de 
 # Align.Pairwise() con las matrices BLOSUM45, BLOSUM100, PAM250 Y PAM30.
