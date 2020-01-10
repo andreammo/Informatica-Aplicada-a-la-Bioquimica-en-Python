@@ -1,0 +1,253 @@
+
+################################ PRÃCTICA 9 ###################################
+# Comenzamos definiendo las secuencias con las que vamos a trabajar.
+from Bio import SeqIO
+from Bio.Seq import Seq
+
+samba_virus = list(SeqIO.parse("samba_sec.fasta", "fasta"))
+
+virus_1 = samba_virus[0]
+virus_3 = samba_virus[2]
+
+import matplotlib.pyplot as plt
+plt.plot(range(len(virus_1)), virus_1, label = 'virus_1')
+plt.plot(range(len(virus_1)), virus_3[0:len(virus_1)],
+         label = 'virus_3', color = 'orange')
+plt.legend()
+plt.title('Plot de las secuencias virus_1 y virus_3')
+plt.savefig('P9_1_1.png')
+plt.show()
+
+
+# EJERCICIO 1.2
+# Para esta prÃ¡ctica, vamos a usar una herramienta que nos ofrece Biopython. 
+# Se trata del paquete Align. En este encontramos los cÃ³digos para alinear 
+# secuencias y las matrices de sustituciÃ³n. La funciÃ³n que vamos a usar va a ser
+# Align.PairwiseAligner() que implementa el algoritmo de alineamiento de
+# Needleman - Wunsh. Comenzamos cargando los paquetes y definiendo nuestro
+# "aligner", una vaiable que va a guardar los parÃ¡metros del alineamiento.
+
+
+from Bio import Align
+aligner = Align.PairwiseAligner()
+
+s = str('MRTEIESLWVFALASKFNIYMQQHFASLLVAIAITWFTITI')
+t = str('MEDQVGFGFRPNDEELVGHYLRNKIEGNTSRDVEVAISEVNIC')
+
+from Bio.SubsMat.MatrixInfo import blosum100
+aligner.substitution_matrix = blosum100
+
+score = aligner.score(s, t)
+alignments = aligner.align(s, t)
+
+print(alignments[0], score)
+
+# EJERCICIO 1.3
+# Vamos a alinear dos secuencias de DNA, pero esta vez vamos a determinar la 
+# matriz de sustituciÃ³n. Para ello definimos primero la matriz:
+na = []
+matrix = {('A','A'): 1.0, ('A','C'): -1.0,
+          ('A','G'): -1.5,
+          ('A','T'): -1.5
+
+          ('C','A'): -1.0
+          ('C','C'): 1.0
+          ('C','G'): -1.5,
+          ('C','T'): -1.5,
+#          ('C',''): -2.0
+          ('G','A'): -1.5,
+          ('G','C'): -1.5,
+          ('G','G'): 1.0,
+          ('G','T'): -1.0,
+#          ('G',''): -2.0,
+          ('T','A'): -1.5,
+          ('T','C'): -1.5,
+          ('T','G'): -1.0,
+          ('T','T'): 1.0 }
+#          ('T',''): -2.0 
+
+aligner.substitution_matrix = matrix
+
+
+seq1 =str('TTGCACGATAGTTGCATATGCTACAA')
+seq2 = str('TTGATTAAGCCCTATGCTTCGTACACAAAAC')
+
+aligner = Align.PairwiseAligner()
+
+
+score = aligner.score(seq1, seq2)
+alignments = aligner.align(seq1, seq2)
+
+print(alignments[0], score)
+
+############################# EJERCICIO 2 #####################################
+# EJERCICIO 2.1
+# Vamos a alinear la secuencias virus_1 y virus_3 usando la funciÃ³n de 
+# Align.Pairwise() con las matrices BLOSUM45, BLOSUM100, PAM250 Y PAM30.
+
+# Para BLOSUM45
+aligner = Align.PairwiseAligner()
+from Bio.SubsMat.MatrixInfo import blosum45
+aligner.substitution_matrix = blosum45
+
+score = aligner.score(virus_1, virus_3)
+print('Score para BLOSUM45: ', score)
+
+# Para BLOSUM100
+aligner = Align.PairwiseAligner()
+from Bio.SubsMat.MatrixInfo import blosum100
+aligner.substitution_matrix = blosum100
+
+score = aligner.score(virus_1, virus_3)
+print('Score para BLOSUM100: ', score)
+
+#Para PAM250
+aligner = Align.PairwiseAligner()
+from Bio.SubsMat.MatrixInfo import pam250
+aligner.substitution_matrix = pam250
+
+score = aligner.score(virus_1, virus_3)
+print('Score para PAM250: ', score)
+
+# Para PAM30
+aligner = Align.PairwiseAligner()
+from Bio.SubsMat.MatrixInfo import pam30
+aligner.substitution_matrix = pam30
+
+score = aligner.score(virus_1, virus_3)
+print('Score para PAM30: ', score)
+
+# EJERCICIO 2.2
+# Vamos a comparar todos los genes con todos. Para ello vamos a escribir un 
+# cÃ³digo que al introducirle una secuencia nos devuelva una lista de listas 
+# con el score del alineamiento. Esto se consigue introduciendo en el cÃ³digo
+# "align.mode = local"
+
+# Para BLOSUM100
+scores_blosum100 = []
+for i in range(0,len(samba_virus)):
+    seq1 = samba_virus[i].seq
+    
+    for j in range(i+1, len(samba_virus)):
+        seq2 = samba_virus[j].seq
+        aligner = Align.PairwiseAligner()
+        
+        from Bio.SubsMat.MatrixInfo import blosum100
+        aligner.substitution_matrix = blosum100
+        score = aligner.score(seq1, seq2)
+        
+        scores_blosum100.append(['Sec comparadas', i, j, score])
+        
+# Para BLOSUM45
+scores_blosum45 = []
+for i in range(0,len(samba_virus)):
+    seq1 = samba_virus[i].seq
+    
+    for j in range(i+1, len(samba_virus)):
+        seq2 = samba_virus[j].seq
+        aligner = Align.PairwiseAligner()
+        
+        from Bio.SubsMat.MatrixInfo import blosum45
+        aligner.substitution_matrix = blosum45
+        score = aligner.score(seq1, seq2)
+        
+        scores_blosum45.append(['Sec comparadas', i, j, score])
+ 
+# Para PAM250       
+scores_pam250 = []
+for i in range(0,len(samba_virus)):
+    seq1 = samba_virus[i].seq
+    
+    for j in range(i+1, len(samba_virus)):
+        seq2 = samba_virus[j].seq
+        aligner = Align.PairwiseAligner()
+        
+        from Bio.SubsMat.MatrixInfo import pam250
+        aligner.substitution_matrix = pam250
+        score = aligner.score(seq1, seq2)
+        
+        scores_pam250.append(['Sec comparadas', i, j, score])
+
+# Para PAM30
+scores_pam30 = []
+for i in range(0,len(samba_virus)):
+    seq1 = samba_virus[i].seq
+    
+    for j in range(i+1, len(samba_virus)):
+        seq2 = samba_virus[j].seq
+        aligner = Align.PairwiseAligner()
+        
+        from Bio.SubsMat.MatrixInfo import pam30
+        aligner.substitution_matrix = pam30
+        score = aligner.score(seq1, seq2)
+        
+        scores_pam30.append(['Sec comparadas', i, j, score])
+
+print(scores_blosum100, scores_blosum45, scores_pam250, scores_pam30)
+
+############################### EJERCICIO 3 ###################################
+# Vamos a hacer los alineamientos del apartado 2.3 de manera loca, no globales 
+# Biopython tiene definido por defeccto. 
+
+# Para BLOSUM100
+scores_blosum100 = []
+for i in range(0,len(samba_virus)):
+    seq1 = samba_virus[i].seq
+    
+    for j in range(i+1, len(samba_virus)):
+        seq2 = samba_virus[j].seq
+        aligner = Align.PairwiseAligner()
+        aligner.mode = 'local'
+        from Bio.SubsMat.MatrixInfo import blosum100
+        aligner.substitution_matrix = blosum100
+        score = aligner.score(seq1, seq2)
+        
+        scores_blosum100.append(['Sec comparadas', i, j, score])
+        
+# Para BLOSUM45
+scores_blosum45 = []
+for i in range(0,len(samba_virus)):
+    seq1 = samba_virus[i].seq
+    
+    for j in range(i+1, len(samba_virus)):
+        seq2 = samba_virus[j].seq
+        aligner = Align.PairwiseAligner()
+        aligner.mode = 'local'
+        from Bio.SubsMat.MatrixInfo import blosum45
+        aligner.substitution_matrix = blosum45
+        score = aligner.score(seq1, seq2)
+        
+        scores_blosum45.append(['Sec comparadas', i, j, score])
+ 
+# Para PAM250       
+scores_pam250 = []
+for i in range(0,len(samba_virus)):
+    seq1 = samba_virus[i].seq
+    
+    for j in range(i+1, len(samba_virus)):
+        seq2 = samba_virus[j].seq
+        aligner = Align.PairwiseAligner()
+        aligner.mode = 'local'
+        from Bio.SubsMat.MatrixInfo import pam250
+        aligner.substitution_matrix = pam250
+        score = aligner.score(seq1, seq2)
+        
+        scores_pam250.append(['Sec comparadas', i, j, score])
+
+# Para PAM30
+scores_pam30 = []
+for i in range(0,len(samba_virus)):
+    seq1 = samba_virus[i].seq
+    
+    for j in range(i+1, len(samba_virus)):
+        seq2 = samba_virus[j].seq
+        aligner = Align.PairwiseAligner()
+        aligner.mode = 'local'
+        from Bio.SubsMat.MatrixInfo import pam30
+        aligner.substitution_matrix = pam30
+        score = aligner.score(seq1, seq2)
+        
+        scores_pam30.append(['Sec comparadas', i, j, score])
+
+
+       
